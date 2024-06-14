@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Map</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://geoapi.heartrails.com/api/geoapi.js"></script>
+    <script type="text/javascript" src= https://geoapi.heartrails.com/api/json?method=searchByPostal></script>
+    
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+
+</head>
+
+<body>
+    <div style="text-align: left;padding-left:10px;">
+        <form>
+
+            <table>
+                <tr>
+                    <th>郵便番号:</th>
+                    <td><input type="text" id="zip" size="8" maxlength="7"><input type="button"
+                            onclick="SearchAddress();return false;" value="住所検索">　※ハイフォンなしで入力してください。</td></div>
+                </tr>
+                <tr>
+                    <th>都道府県:</th>
+                    <td><input type="text" id="pref" size="8"></td>
+                </tr>
+                <tr>
+                    <th>市区町村:</th>
+                    <td><input type="text" id="city"><input type="text" id="city_kana"></td>
+                </tr>
+                <tr>
+                    <th>町域:</th>
+                    <td><input type="text" id="town"><input type="text" id="town_kana"></td>
+                </tr>
+                <tr>
+                    <th>緯度:</th>
+                    <td><input type="text" id="lat"></td>
+                </tr>
+                <tr>
+                    <th>経度:</th>
+                    <td><input type="text" id="lng"></td>
+                </tr>
+ 
+            </table>
+        </form>
+        <button id="btn">データ取得</button>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!-- axiosライブラリの読み込み -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script>
+        function SearchAddress() {	//「住所検索」ボタンが押された時に呼ばれる関数
+            var zipcode = document.getElementById("zip").value;
+            console.log(zipcode);
+
+
+            if (!CheckZipcode(zipcode)) {	//郵便番号のチェック
+                alert("[ " + zipcode + " ]は正しくない郵便番号です");
+                return;
+            }
+            Ctrl_cursor("wait");	//マウスカーソルを待機状態にする
+            RemoveScript("//geoapi.heartrails.com/api/json?method=searchByPostal&postal=");
+            var target = document.createElement("script");
+            target.src = "//geoapi.heartrails.com/api/json?method=searchByPostal&postal=" + encodeURIComponent(zipcode) + "&jsonp=GetAddress";	//HeartRails Geo のサイトから住所情報を取得
+            document.body.appendChild(target);
+        }
+        function CheckZipcode(zipcode) {	//郵便番号のチェック
+            if (!zipcode) return false;	//郵便番号が入力されていない
+            if (!zipcode.match(/^\d{7}$/)) {	//入力された郵便番号が７桁であるか
+                return false;
+            }
+            return true;
+        }
+        function GetAddress(zip) { //コールバック関数(住所情報の取得)
+            if (!zip.response.error) {
+                document.getElementById("pref").value = zip.response.location[0].prefecture;
+                document.getElementById("city").value = zip.response.location[0].city;
+                document.getElementById("city_kana").value = zip.response.location[0].city_kana;
+                document.getElementById("town").value = zip.response.location[0].town;
+                document.getElementById("town_kana").value = zip.response.location[0].town_kana;
+                document.getElementById("lat").value = zip.response.location[0].y;
+                document.getElementById("lng").value = zip.response.location[0].x;
+                console.log(zip.responce.location[0]);
+                const lat = zip.response.location[0].y;
+                const lng = zip.response.location[0].x;
+            } else {
+                alert(zip.response.error);
+            }
+
+        }
+        function Ctrl_cursor(ctrl) { //マウスカーソルの制御
+            document.body.style.cursor = ctrl;
+            var tag = Array('input', 'a', 'button', 'select');
+            for (var j = 0; j < tag.length; j++) {
+                for (var i = 0; i < document.getElementsByTagName(tag[j]).length; i++) {
+                    document.getElementsByTagName(tag[j])[i].style.cursor = ctrl;
+                }
+            }
+        }
+        function RemoveScript(url) {
+            for (var i = document.scripts.length - 1; i >= 0; i--) {
+                var p = document.getElementsByTagName('script')[i];
+                if (p.getAttribute('src') != null && p.getAttribute('src').indexOf(url) == 0) {
+                    p.parentNode.removeChild(p);
+                }
+            }
+        };
+    </script>
+
+
+    <h3>My Google Maps Demo</h3>
+    <!--The div element for the map -->
+    <div id="map"></div>
+
+    <!-- prettier-ignore -->
+    <script>
+        (g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })
+        ({ key: "", v: "beta" });
+    
+        // Initialize and add the map
+            let map;
+ 
+        const position = { lat: 33.5867161, lng: 130.3944552 };
+
+            async function initMap() {
+                $("#button").on("click", function () {
+                // The location of Uluru
+                //座標をテキストボックスから取得
+                var lat = $('#lat').val();
+                var lng = $('#lng').val();
+                const position = { lat: lat, lng: lng };
+                });
+                // Request needed libraries.
+                //@ts-ignore
+                const { Map } = await google.maps.importLibrary("maps");
+                const { AdvancedMarkerView } = await google.maps.importLibrary("marker");
+
+                // The map, centered at Uluru
+                map = new Map(document.getElementById("map"), {
+                    zoom: 4,
+                    center: position,
+                    mapId: "DEMO_MAP_ID",
+                });
+
+                // The marker, positioned at Uluru
+                const marker = new AdvancedMarkerView({
+                    map: map,
+                    position: position,
+                });
+                
+            }
+
+            initMap();
+        
+            
+    </script>
+</body>
+
+</html>
